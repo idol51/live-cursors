@@ -16,6 +16,7 @@
     "typescript": "^5.6.3"
   },
   "dependencies": {
+    "dotenv": "^16.4.7",
     "shared": "*",
     "socket.io": "^4.8.1"
   }

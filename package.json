@@ -5,7 +5,9 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "turbo dev"
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "start:backend": "node dist/backend/src/index.js"
   },
   "workspaces": [
     "frontend",

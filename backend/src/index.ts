@@ -6,6 +6,11 @@ import {
   ServerToClientEvents,
   SocketData,
 } from "@shared/types";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const port = process.env.PORT || 3000;
 
 const httpServer = createServer();
 
@@ -36,4 +41,6 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen(3000);
+httpServer.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});

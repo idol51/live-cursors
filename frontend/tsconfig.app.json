@@ -22,13 +22,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
-
-    "baseUrl": ".",
-    "paths": {
-      "@frontend/*": ["./src/*"],
-      "@shared/*": ["../shared/src/*"]
-    }
+    "noUncheckedSideEffectImports": true
   },
   "include": ["src", "src/lib", "../shared/src/**/*"]
 }
