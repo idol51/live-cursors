@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon",
     "start": "npm run build && node dist/index.js",
-    "build": "rimraf dist && tsc",
+    "build": "tsc",
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
