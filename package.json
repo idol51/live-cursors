@@ -1,0 +1,19 @@
+{
+  "name": "live-cursors",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev"
+  },
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
+  "devDependencies": {
+    "turbo": "^2.3.3"
+  },
+  "packageManager": "yarn@1.22.21"
+}
