@@ -1,4 +1,3 @@
-import { createServer } from "http";
 import { Server } from "socket.io";
 import {
   ClientToServerEvents,
@@ -7,12 +6,21 @@ import {
   SocketData,
 } from "@shared/types";
 import dotenv from "dotenv";
+import express, { Response, Request } from "express";
+import { createServer } from "http";
 
 dotenv.config();
 
 const port = process.env.PORT || 3000;
 
-const httpServer = createServer();
+const app = express();
+const httpServer = createServer(app);
+
+app.get("/healthz", (_req: Request, res: Response) => {
+  res.status(200).json({
+    message: "OK",
+  });
+});
 
 const io = new Server<
   ClientToServerEvents,

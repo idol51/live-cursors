@@ -10,6 +10,7 @@
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
     "@types/node": "^22.9.0",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "shared": "*",
     "socket.io": "^4.8.1"
   }
