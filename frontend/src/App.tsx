@@ -9,6 +9,7 @@ export default function App() {
     [id: string]: {
       name: string;
       pos: { X: number; Y: number } | null;
+      msg: string;
     };
   }>(
     socket.id
@@ -16,6 +17,7 @@ export default function App() {
           [socket.id]: {
             name: "Username",
             pos: null,
+            msg: "",
           },
         }
       : {}
@@ -26,7 +28,7 @@ export default function App() {
 
   const throttledMessageChange = throttle<(msg: string) => void>(
     (msg: string) => {
-      socket.emit("message", msg);
+      socket.emit("sendMessage", msg);
     },
     50
   );
@@ -55,8 +57,9 @@ export default function App() {
     if (e.key === "/") setShowInput(true);
     else if (e.key === "Escape") setShowInput(false);
     else if (showInput) {
-      if (e.key === "Backspace") setMessage((prev) => "H");
-      else setMessage((prev) => prev + e.key);
+      if (e.key === "Backspace")
+        setMessage((prev) => prev.slice(0, prev.length - 1));
+      else if (e.key.length === 1) setMessage((prev) => prev + e.key);
     }
   };
 
@@ -96,7 +99,6 @@ export default function App() {
         }));
       }
     });
-    document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("keypress", (e) => {
       console.log(e.key);
     });
@@ -107,13 +109,23 @@ export default function App() {
         [id]: {
           name,
           pos: null,
+          msg: "",
         },
       }));
     });
 
     socket.on("cursorUpdate", ({ id, pos }) => {
-      const updatedCursor = { ...cursors[id], pos };
-      setCursors((prev) => ({ ...prev, [id]: updatedCursor }));
+      setCursors((prev) => {
+        const updatedCursor = { ...prev[id], pos };
+        return { ...prev, [id]: updatedCursor };
+      });
+    });
+
+    socket.on("messageUpdate", ({ id, msg }) => {
+      setCursors((prev) => {
+        const updatedCursor = { ...prev[id], msg };
+        return { ...prev, [id]: updatedCursor };
+      });
     });
 
     return () => {
@@ -148,9 +160,15 @@ export default function App() {
           }));
         }
       });
-      document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showInput]);
 
   return (
     <div className="h-screen relative w-screen overflow-hidden cursor-none">
@@ -165,12 +183,16 @@ export default function App() {
         >
           <span>{data.name}</span>
           <MousePointer2 fill={"black"} />
-          {showInput && (
-            <Input
-              className="shadow-lg rounded-full px-4 bg-white mt-2 w-72"
-              placeholder="Say something.."
-              value={message}
-            />
+          {id === socket.id ? (
+            showInput && (
+              <Input
+                className="shadow-lg rounded-full px-4 bg-white mt-2 w-72"
+                placeholder="Say something.."
+                value={message}
+              />
+            )
+          ) : (
+            <span>{data.msg}</span>
           )}
         </div>
       ))}

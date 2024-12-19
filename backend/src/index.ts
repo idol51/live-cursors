@@ -36,8 +36,8 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("cursorUpdate", { id: socket.id, pos });
   });
 
-  socket.on("message", (message) => {
-    console.log(message);
+  socket.on("sendMessage", (msg) => {
+    socket.broadcast.emit("messageUpdate", { id: socket.id, msg });
   });
 });
 
