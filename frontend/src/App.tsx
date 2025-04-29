@@ -4,24 +4,19 @@ import { MousePointer2 } from "lucide-react";
 import { Input } from "./components/ui/input";
 import { socket } from "./lib/socket";
 
+type TCursorPos = { X: number; Y: number };
+
+type TCursors = {
+  [id: string]: {
+    name: string;
+    pos: TCursorPos | null;
+    msg: string;
+    color: string;
+  };
+};
+
 export default function App() {
-  const [cursors, setCursors] = useState<{
-    [id: string]: {
-      name: string;
-      pos: { X: number; Y: number } | null;
-      msg: string;
-    };
-  }>(
-    socket.id
-      ? {
-          [socket.id]: {
-            name: "Username",
-            pos: null,
-            msg: "",
-          },
-        }
-      : {}
-  );
+  const [cursors, setCursors] = useState<TCursors>({});
 
   const [showInput, setShowInput] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
@@ -33,24 +28,23 @@ export default function App() {
     50
   );
 
-  const throttledMouseMove = throttle<(e: MouseEvent) => void>(
-    (e: MouseEvent) => {
-      socket.emit("cursorPosition", {
+  const throttledMouseMove = throttle<
+    (e: MouseEvent, cursors: TCursors) => void
+  >((e: MouseEvent) => {
+    socket.emit("cursorPosition", {
+      pos: { X: e.clientX, Y: e.clientY },
+    });
+    if (socket.id !== undefined) {
+      const updatedCursor = {
+        ...cursors[socket.id],
         pos: { X: e.clientX, Y: e.clientY },
-      });
-      if (socket.id !== undefined) {
-        const updatedCursor = {
-          ...cursors[socket.id],
-          pos: { X: e.clientX, Y: e.clientY },
-        };
-        setCursors((prev) => ({
-          ...prev,
-          [socket.id as string]: updatedCursor,
-        }));
-      }
-    },
-    50
-  );
+      };
+      setCursors((prev) => ({
+        ...prev,
+        [socket.id as string]: updatedCursor,
+      }));
+    }
+  }, 50);
 
   const handleKeyDown = (e: KeyboardEvent) => {
     e.preventDefault();
@@ -63,53 +57,63 @@ export default function App() {
     }
   };
 
+  const handleMouseEnterExit = (
+    e: MouseEvent,
+    cursors: TCursors,
+    pos: TCursorPos | null
+  ) => {
+    socket.emit("cursorPosition", {
+      pos,
+    });
+    if (socket.id !== undefined) {
+      const updatedCursor = {
+        ...cursors[socket.id],
+        pos,
+      };
+      setCursors((prev) => ({
+        ...prev,
+        [socket.id as string]: updatedCursor,
+      }));
+    }
+  };
+
   useEffect(() => {
     throttledMessageChange(message);
   }, [message]);
 
   useEffect(() => {
-    document.addEventListener("mousemove", throttledMouseMove);
-    document.addEventListener("mouseenter", (e) => {
-      socket.emit("cursorPosition", {
-        pos: { X: e.clientX, Y: e.clientY },
-      });
-      if (socket.id !== undefined) {
-        const updatedCursor = {
-          ...cursors[socket.id],
-          pos: { X: e.clientX, Y: e.clientY },
-        };
-        setCursors((prev) => ({
-          ...prev,
-          [socket.id as string]: updatedCursor,
-        }));
-      }
-    });
-    document.addEventListener("mouseleave", () => {
-      socket.emit("cursorPosition", {
-        pos: null,
-      });
-      if (socket.id !== undefined) {
-        const updatedCursor = {
-          ...cursors[socket.id],
-          pos: null,
-        };
-        setCursors((prev) => ({
-          ...prev,
-          [socket.id as string]: updatedCursor,
-        }));
-      }
-    });
-    document.addEventListener("keypress", (e) => {
-      console.log(e.key);
-    });
+    document.addEventListener("mousemove", (e) =>
+      throttledMouseMove(e, cursors)
+    );
+    document.addEventListener("mouseenter", (e) =>
+      handleMouseEnterExit(e, cursors, { X: e.clientX, Y: e.clientY })
+    );
+    document.addEventListener("mouseleave", (e) =>
+      handleMouseEnterExit(e, cursors, null)
+    );
 
-    socket.on("newUser", ({ id, name }) => {
+    return () => {
+      document.removeEventListener("mousemove", (e) =>
+        throttledMouseMove(e, cursors)
+      );
+      document.removeEventListener("mouseenter", (e) =>
+        handleMouseEnterExit(e, cursors, { X: e.clientX, Y: e.clientY })
+      );
+      document.removeEventListener("mouseleave", (e) =>
+        handleMouseEnterExit(e, cursors, null)
+      );
+    };
+  }, [cursors, socket.id]);
+
+  useEffect(() => {
+    socket.on("newUser", ({ id, name, color }) => {
       setCursors((prev) => ({
         ...prev,
         [id]: {
           name,
           pos: null,
           msg: "",
+          color,
         },
       }));
     });
@@ -129,36 +133,28 @@ export default function App() {
     });
 
     return () => {
-      document.removeEventListener("mousemove", throttledMouseMove);
-      document.removeEventListener("mouseenter", (e) => {
-        socket.emit("cursorPosition", {
-          pos: { X: e.clientX, Y: e.clientY },
-        });
-        if (socket.id !== undefined) {
-          const updatedCursor = {
-            ...cursors[socket.id],
-            pos: { X: e.clientX, Y: e.clientY },
-          };
-          setCursors((prev) => ({
-            ...prev,
-            [socket.id as string]: updatedCursor,
-          }));
-        }
-      });
-      document.removeEventListener("mouseleave", () => {
-        socket.emit("cursorPosition", {
-          pos: null,
-        });
-        if (socket.id !== undefined) {
-          const updatedCursor = {
-            ...cursors[socket.id],
+      socket.off("newUser", ({ id, name, color }) => {
+        setCursors((prev) => ({
+          ...prev,
+          [id]: {
+            name,
             pos: null,
-          };
-          setCursors((prev) => ({
-            ...prev,
-            [socket.id as string]: updatedCursor,
-          }));
-        }
+            msg: "",
+            color,
+          },
+        }));
+      });
+      socket.off("cursorUpdate", ({ id, pos }) => {
+        setCursors((prev) => {
+          const updatedCursor = { ...prev[id], pos };
+          return { ...prev, [id]: updatedCursor };
+        });
+      });
+      socket.off("messageUpdate", ({ id, msg }) => {
+        setCursors((prev) => {
+          const updatedCursor = { ...prev[id], msg };
+          return { ...prev, [id]: updatedCursor };
+        });
       });
     };
   }, []);
@@ -169,6 +165,10 @@ export default function App() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [showInput]);
+
+  // useEffect(() => {
+  //   console.log(cursors);
+  // }, [cursors]);
 
   return (
     <div className="h-screen relative w-screen overflow-hidden cursor-none">
@@ -181,8 +181,8 @@ export default function App() {
               : { display: "none" }
           }
         >
-          <span>{data.name}</span>
-          <MousePointer2 fill={"black"} />
+          <span style={{ color: data.color }}>{data.name}</span>
+          <MousePointer2 fill={data.color} color={data.color} />
           {id === socket.id ? (
             showInput && (
               <Input

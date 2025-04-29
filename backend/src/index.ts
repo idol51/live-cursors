@@ -8,6 +8,7 @@ import {
 import dotenv from "dotenv";
 import express, { Response, Request } from "express";
 import { createServer } from "http";
+import { faker } from "@faker-js/faker";
 
 dotenv.config();
 
@@ -35,9 +36,12 @@ const io = new Server<
 });
 
 io.on("connection", (socket) => {
+  const name = faker.person.fullName();
+  const color = faker.color.rgb();
   socket.emit("newUser", {
     id: socket.id,
-    name: "Username",
+    name,
+    color,
   });
 
   socket.on("cursorPosition", ({ pos }) => {

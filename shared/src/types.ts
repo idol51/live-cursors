@@ -1,5 +1,13 @@
 export interface ServerToClientEvents {
-  newUser: ({ id, name }: { id: string; name: string }) => void;
+  newUser: ({
+    id,
+    name,
+    color,
+  }: {
+    id: string;
+    name: string;
+    color: string;
+  }) => void;
   cursorUpdate: ({
     id,
     pos,
