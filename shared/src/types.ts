@@ -11,11 +11,25 @@ export interface ServerToClientEvents {
   cursorUpdate: ({
     id,
     pos,
+    name,
+    color,
   }: {
     id: string;
     pos: { X: number; Y: number } | null;
+    name: string;
+    color: string;
   }) => void;
-  messageUpdate: ({ id, msg }: { id: string; msg: string }) => void;
+  messageUpdate: ({
+    id,
+    msg,
+    color,
+    name,
+  }: {
+    id: string;
+    msg: string;
+    name: string;
+    color: string;
+  }) => void;
 }
 
 export interface ClientToServerEvents {

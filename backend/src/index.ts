@@ -45,11 +45,11 @@ io.on("connection", (socket) => {
   });
 
   socket.on("cursorPosition", ({ pos }) => {
-    socket.broadcast.emit("cursorUpdate", { id: socket.id, pos });
+    socket.broadcast.emit("cursorUpdate", { id: socket.id, pos, name, color });
   });
 
   socket.on("sendMessage", (msg) => {
-    socket.broadcast.emit("messageUpdate", { id: socket.id, msg });
+    socket.broadcast.emit("messageUpdate", { id: socket.id, msg, name, color });
   });
 });
 

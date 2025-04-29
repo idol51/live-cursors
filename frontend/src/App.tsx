@@ -118,16 +118,16 @@ export default function App() {
       }));
     });
 
-    socket.on("cursorUpdate", ({ id, pos }) => {
+    socket.on("cursorUpdate", ({ id, ...props }) => {
       setCursors((prev) => {
-        const updatedCursor = { ...prev[id], pos };
+        const updatedCursor = { ...prev[id], ...props };
         return { ...prev, [id]: updatedCursor };
       });
     });
 
-    socket.on("messageUpdate", ({ id, msg }) => {
+    socket.on("messageUpdate", ({ id, ...props }) => {
       setCursors((prev) => {
-        const updatedCursor = { ...prev[id], msg };
+        const updatedCursor = { ...prev[id], ...props };
         return { ...prev, [id]: updatedCursor };
       });
     });
@@ -144,15 +144,18 @@ export default function App() {
           },
         }));
       });
-      socket.off("cursorUpdate", ({ id, pos }) => {
+
+      socket.off("cursorUpdate", ({ id, ...props }) => {
         setCursors((prev) => {
-          const updatedCursor = { ...prev[id], pos };
+          const updatedCursor = { ...prev[id], ...props };
+          console.log("qwertyuiop", updatedCursor);
           return { ...prev, [id]: updatedCursor };
         });
       });
-      socket.off("messageUpdate", ({ id, msg }) => {
+
+      socket.off("messageUpdate", ({ id, ...props }) => {
         setCursors((prev) => {
-          const updatedCursor = { ...prev[id], msg };
+          const updatedCursor = { ...prev[id], ...props };
           return { ...prev, [id]: updatedCursor };
         });
       });
