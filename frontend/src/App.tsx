@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { throttle } from "./lib/utils";
+import { cn, throttle } from "./lib/utils";
 import { MousePointer2 } from "lucide-react";
 import { Input } from "./components/ui/input";
 import { socket } from "./lib/socket";
+import { LoadingScreen } from "./components/loading-screen";
 
 type TCursorPos = { X: number; Y: number };
 
@@ -16,6 +17,7 @@ type TCursors = {
 };
 
 export default function App() {
+  const [connected, setConnected] = useState<boolean>(false);
   const [cursors, setCursors] = useState<TCursors>({});
 
   const [showInput, setShowInput] = useState<boolean>(false);
@@ -169,12 +171,27 @@ export default function App() {
     };
   }, [showInput]);
 
-  // useEffect(() => {
-  //   console.log(cursors);
-  // }, [cursors]);
+  useEffect(() => {
+    const handleConnect = () => setConnected(true);
+    const handleDisconnect = () => setConnected(false);
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, []);
 
   return (
-    <div className="h-screen relative w-screen overflow-hidden cursor-none">
+    <div
+      className={cn(
+        "h-screen relative w-screen overflow-hidden",
+        connected ? "cursor-none" : ""
+      )}
+    >
+      {!connected && <LoadingScreen />}
       {Object.entries(cursors).map(([id, data]) => (
         <div
           className="absolute z-50"
